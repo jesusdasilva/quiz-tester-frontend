@@ -1,103 +1,95 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getQuizTopics, QuizTopic } from '@/services/quizApi';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [topics, setTopics] = useState<QuizTopic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  useEffect(() => {
+    async function loadTopics() {
+      try {
+        console.log('Fetching topics from API...');
+        const fetchedTopics = await getQuizTopics();
+        console.log('Topics fetched successfully:', fetchedTopics);
+        console.log('Topics type:', typeof fetchedTopics);
+        console.log('Topics length:', fetchedTopics?.length);
+        console.log('Topics is array:', Array.isArray(fetchedTopics));
+        setTopics(fetchedTopics);
+      } catch (err) {
+        console.error('Error fetching topics:', err);
+        setError(`Failed to load quiz topics: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+      setLoading(false);
+    }
+
+    loadTopics();
+  }, []);
+
+  return (
+    <main className="flex flex-col items-center justify-center min-h-screen p-8">
+      <h1 className="text-4xl font-bold mb-8">Quiz App</h1>
+
+      {loading && <p>Loading topics...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {topics && topics.length > 0 ? (
+          topics.map((topic) => (
+            <div key={topic.id} className="mb-8">
+              <Card className="w-full max-w-md border border-gray-200 rounded-xl bg-white shadow p-6">
+                {topic.image_url && (
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center">
+                      <img
+                        src={topic.image_url}
+                        alt={topic.name}
+                        className="w-14 h-14 object-contain"
+                        style={{ width: '56px', height: '56px', objectFit: 'contain' }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="mb-2">
+                  <span className="block text-2xl font-bold text-gray-900 text-left">
+                    {topic.name}
+                  </span>
+                </div>
+                <div className="mb-4">
+                  <p className="text-gray-500 text-base text-left">
+                    {topic.description}
+                  </p>
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  {topic.questions_count !== undefined && (
+                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                      {topic.questions_count} pregunta{topic.questions_count !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-start">
+                  <Link
+                    href={`/quiz/${topic.id}`}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors duration-200 text-base"
+                  >
+                    Comenzar Quiz
+                  </Link>
+                </div>
+              </Card>
+            </div>
+          ))
+        ) : (
+          !loading && !error && <p className="text-gray-500">No hay temas disponibles</p>
+        )}
+      </div>
+    </main>
   );
 }
