@@ -27,6 +27,45 @@ export interface QuizQuestion {
   correctAnswer: string;
 }
 
+// Nuevas interfaces para la pregunta individual
+export interface QuestionLocales {
+  en: {
+    question: string;
+    options: string[];
+    explanation: string;
+  };
+  es: {
+    question: string;
+    options: string[];
+    explanation: string;
+  };
+}
+
+export interface QuestionData {
+  id: string;
+  question_id: string;
+  topic_id: string;
+  number: number;
+  correct_answers: number[];
+  locales: QuestionLocales;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NavigationData {
+  current: number;
+  total: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  previousNumber: number;
+  nextNumber: number;
+}
+
+export interface QuestionResponse {
+  question: QuestionData;
+  navigation: NavigationData;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 // Debug: verificar que la variable de entorno se está cargando
@@ -63,4 +102,45 @@ export async function getQuizQuestions(topicId: string): Promise<QuizQuestion[]>
     throw new Error('Failed to fetch quiz questions');
   }
   return response.json();
+}
+
+// Nueva función para obtener pregunta individual con navegación
+export async function getQuestionByNumber(topicId: string, questionNumber: number): Promise<QuestionResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/questions/topic/${topicId}/navigate/${questionNumber}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch question');
+  }
+  
+  const rawResponse = await response.json();
+  const apiResponse: ApiResponse<QuestionResponse> = rawResponse;
+  
+  if (!apiResponse.success) {
+    throw new Error(apiResponse.message || 'Failed to fetch question');
+  }
+  
+  return apiResponse.data;
+}
+
+// Función para obtener todas las preguntas de un tema
+export async function getAllQuestionsForTopic(topicId: string): Promise<QuestionData[]> {
+  const questions: QuestionData[] = [];
+  let currentQuestion = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    try {
+      const response = await getQuestionByNumber(topicId, currentQuestion);
+      questions.push(response.question);
+      
+      if (response.navigation.hasNext) {
+        currentQuestion = response.navigation.nextNumber;
+      } else {
+        hasMore = false;
+      }
+    } catch (error) {
+      hasMore = false;
+    }
+  }
+
+  return questions;
 }
