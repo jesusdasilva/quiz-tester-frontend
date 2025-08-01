@@ -35,17 +35,6 @@ export default function QuestionPage() {
     isInitialized
   } = useQuizState(topicId);
 
-  useEffect(() => {
-    if (topicId && questionNumber) {
-      loadQuestion();
-    }
-  }, [topicId, questionNumber, loadQuestion]);
-
-  // Forzar re-render cuando se actualicen las estadísticas
-  useEffect(() => {
-    // Este efecto se ejecuta cuando cambia statsUpdateTrigger
-  }, [statsUpdateTrigger]);
-
   const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
@@ -71,6 +60,17 @@ export default function QuestionPage() {
       setLoading(false);
     }
   }, [topicId, questionNumber, updateTotalQuestions, getQuestionAnswer]);
+
+  useEffect(() => {
+    if (topicId && questionNumber) {
+      loadQuestion();
+    }
+  }, [topicId, questionNumber, loadQuestion]);
+
+  // Forzar re-render cuando se actualicen las estadísticas
+  useEffect(() => {
+    // Este efecto se ejecuta cuando cambia statsUpdateTrigger
+  }, [statsUpdateTrigger]);
 
   const handleAnswerSelect = (optionId: number) => {
     if (showResults || !questionData) return; // No permitir cambios después de revisar
