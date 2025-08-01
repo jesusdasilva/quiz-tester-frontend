@@ -26,7 +26,7 @@ export default function QuizPage() {
           } else {
             setError('Tema no encontrado');
           }
-        } catch (err) {
+        } catch {
           setError('Error al cargar el tema. Por favor intenta de nuevo.');
         }
         setLoading(false);

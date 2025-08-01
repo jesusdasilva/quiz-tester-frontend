@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { QuestionData } from '@/services/quizApi';
 
 interface UserAnswer {
   questionNumber: number;
-  selectedAnswers: number[];
+  selectedAnswers: number[]; // Ahora son IDs de opciones, no posiciones
   isCorrect: boolean;
   answered: boolean;
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getQuestionByNumber, QuestionResponse, QuestionData } from '@/services/quizApi';
+import { getQuestionByNumber, QuestionResponse, QuestionOption } from '@/services/quizApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, ArrowLeft, ArrowRight, Languages, BarChart3 } from 'lucide-react';
@@ -27,12 +27,9 @@ export default function QuestionPage() {
 
   // Hook para manejar el estado del quiz
   const {
-    userAnswers,
-    totalQuestions,
     recordAnswer,
     updateTotalQuestions,
     getQuizStats,
-    isQuestionAnswered,
     getQuestionAnswer,
     resetQuiz,
     isInitialized
@@ -42,14 +39,14 @@ export default function QuestionPage() {
     if (topicId && questionNumber) {
       loadQuestion();
     }
-  }, [topicId, questionNumber]);
+  }, [topicId, questionNumber, loadQuestion]);
 
   // Forzar re-render cuando se actualicen las estadísticas
   useEffect(() => {
     // Este efecto se ejecuta cuando cambia statsUpdateTrigger
   }, [statsUpdateTrigger]);
 
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,14 +65,14 @@ export default function QuestionPage() {
         setSelectedAnswers(previousAnswer.selectedAnswers);
         setShowResults(true);
       }
-    } catch (err) {
+    } catch {
       setError('Error al cargar la pregunta. Por favor intenta de nuevo.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [topicId, questionNumber, updateTotalQuestions, getQuestionAnswer]);
 
-  const handleAnswerSelect = (answerIndex: number) => {
+  const handleAnswerSelect = (optionId: number) => {
     if (showResults || !questionData) return; // No permitir cambios después de revisar
     
     const isMultipleChoice = questionData.question.correct_answers?.length > 1;
@@ -83,13 +80,13 @@ export default function QuestionPage() {
     if (isMultipleChoice) {
       // Selección múltiple
       setSelectedAnswers(prev => 
-        prev.includes(answerIndex) 
-          ? prev.filter(i => i !== answerIndex)
-          : [...prev, answerIndex]
+        prev.includes(optionId) 
+          ? prev.filter(id => id !== optionId)
+          : [...prev, optionId]
       );
     } else {
       // Selección simple
-      setSelectedAnswers([answerIndex]);
+      setSelectedAnswers([optionId]);
     }
   };
 
@@ -137,24 +134,24 @@ export default function QuestionPage() {
     setLanguage(prev => prev === 'es' ? 'en' : 'es');
   };
 
-  const isAnswerCorrect = (answerIndex: number) => {
-    return questionData?.question.correct_answers?.includes(answerIndex) || false;
+  const isAnswerCorrect = (optionId: number) => {
+    return questionData?.question.correct_answers?.includes(optionId) || false;
   };
 
-  const isAnswerSelected = (answerIndex: number) => {
-    return selectedAnswers.includes(answerIndex);
+  const isAnswerSelected = (optionId: number) => {
+    return selectedAnswers.includes(optionId);
   };
 
-  const getAnswerStyle = (answerIndex: number) => {
+  const getAnswerStyle = (optionId: number) => {
     if (!showResults) {
-      return isAnswerSelected(answerIndex) 
+      return isAnswerSelected(optionId) 
         ? 'border-blue-500 bg-blue-50' 
         : 'border-gray-200 hover:border-gray-300';
     }
 
-    if (isAnswerCorrect(answerIndex)) {
+    if (isAnswerCorrect(optionId)) {
       return 'border-green-500 bg-green-50';
-    } else if (isAnswerSelected(answerIndex) && !isAnswerCorrect(answerIndex)) {
+    } else if (isAnswerSelected(optionId) && !isAnswerCorrect(optionId)) {
       return 'border-red-500 bg-red-50';
     }
     
@@ -195,9 +192,6 @@ export default function QuestionPage() {
   const isMultipleChoice = questionData.question.correct_answers?.length > 1;
   const isLastQuestion = !questionData.navigation.hasNext;
   const stats = getQuizStats();
-  
-  // Debug: verificar estadísticas
-  console.log('Quiz Stats:', stats);
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
@@ -255,22 +249,22 @@ export default function QuestionPage() {
           <CardContent>
             {/* Opciones de respuesta */}
             <div className="space-y-3 mb-6">
-              {currentLocale.options.map((option, index) => (
+              {currentLocale.options.map((option: QuestionOption) => (
                 <button
-                  key={index}
-                  onClick={() => handleAnswerSelect(index)}
+                  key={option.id}
+                  onClick={() => handleAnswerSelect(option.id)}
                   disabled={showResults}
                   className={`w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ${
-                    getAnswerStyle(index)
+                    getAnswerStyle(option.id)
                   } ${showResults ? 'cursor-default' : 'cursor-pointer'}`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="flex-1">{option}</span>
+                    <span className="flex-1">{option.text}</span>
                     {showResults && (
                       <div className="ml-3">
-                        {isAnswerCorrect(index) ? (
+                        {isAnswerCorrect(option.id) ? (
                           <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : isAnswerSelected(index) && !isAnswerCorrect(index) ? (
+                        ) : isAnswerSelected(option.id) && !isAnswerCorrect(option.id) ? (
                           <XCircle className="h-5 w-5 text-red-500" />
                         ) : null}
                       </div>
@@ -348,7 +342,6 @@ export default function QuestionPage() {
           onRestart={handleRestartQuiz}
         />
       )}
-
     </main>
   );
 } 

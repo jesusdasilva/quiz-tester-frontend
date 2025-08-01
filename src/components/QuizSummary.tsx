@@ -14,7 +14,6 @@ interface QuizSummaryProps {
 }
 
 export default function QuizSummary({ 
-  topicId, 
   totalQuestions, 
   correctAnswers, 
   incorrectAnswers, 

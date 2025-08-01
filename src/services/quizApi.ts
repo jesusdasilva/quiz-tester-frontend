@@ -28,22 +28,26 @@ export interface QuizQuestion {
 }
 
 // Nuevas interfaces para la pregunta individual
+export interface QuestionOption {
+  id: number;
+  text: string;
+}
+
 export interface QuestionLocales {
   en: {
     question: string;
-    options: string[];
+    options: QuestionOption[];
     explanation: string;
   };
   es: {
     question: string;
-    options: string[];
+    options: QuestionOption[];
     explanation: string;
   };
 }
 
 export interface QuestionData {
   id: string;
-  question_id: string;
   topic_id: string;
   number: number;
   correct_answers: number[];
@@ -137,7 +141,7 @@ export async function getAllQuestionsForTopic(topicId: string): Promise<Question
       } else {
         hasMore = false;
       }
-    } catch (error) {
+    } catch {
       hasMore = false;
     }
   }
