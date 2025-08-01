@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UserAnswer {
   questionNumber: number;
@@ -73,7 +73,7 @@ export function useQuizState(topicId: string) {
   }, [userAnswers, totalQuestions, storageKey, isClient, isInitialized]);
 
   // Registrar una respuesta del usuario
-  const recordAnswer = (questionNumber: number, selectedAnswers: number[], correctAnswers: number[]) => {
+  const recordAnswer = useCallback((questionNumber: number, selectedAnswers: number[], correctAnswers: number[]) => {
     const isCorrect = selectedAnswers.length === correctAnswers.length &&
       selectedAnswers.every(answer => correctAnswers.includes(answer));
 
@@ -89,15 +89,15 @@ export function useQuizState(topicId: string) {
       
       return newAnswers;
     });
-  };
+  }, []);
 
   // Actualizar el total de preguntas
-  const updateTotalQuestions = (total: number) => {
+  const updateTotalQuestions = useCallback((total: number) => {
     setTotalQuestions(total);
-  };
+  }, []);
 
   // Obtener estadísticas del quiz
-  const getQuizStats = () => {
+  const getQuizStats = useCallback(() => {
     const answeredQuestions = userAnswers.filter(answer => answer.answered);
     const correctAnswers = answeredQuestions.filter(answer => answer.isCorrect).length;
     const incorrectAnswers = answeredQuestions.filter(answer => !answer.isCorrect).length;
@@ -113,20 +113,20 @@ export function useQuizState(topicId: string) {
     };
 
     return stats;
-  };
+  }, [userAnswers, totalQuestions]);
 
   // Verificar si una pregunta específica fue respondida
-  const isQuestionAnswered = (questionNumber: number) => {
+  const isQuestionAnswered = useCallback((questionNumber: number) => {
     return userAnswers.some(answer => answer.questionNumber === questionNumber && answer.answered);
-  };
+  }, [userAnswers]);
 
   // Obtener la respuesta de una pregunta específica
-  const getQuestionAnswer = (questionNumber: number) => {
+  const getQuestionAnswer = useCallback((questionNumber: number) => {
     return userAnswers.find(answer => answer.questionNumber === questionNumber);
-  };
+  }, [userAnswers]);
 
   // Reiniciar el quiz
-  const resetQuiz = () => {
+  const resetQuiz = useCallback(() => {
     setUserAnswers([]);
     setTotalQuestions(0);
     // Limpiar localStorage
@@ -137,10 +137,10 @@ export function useQuizState(topicId: string) {
         console.error('Error clearing localStorage:', error);
       }
     }
-  };
+  }, [isClient, storageKey]);
 
   // Limpiar estado de otros temas
-  const clearOtherTopics = () => {
+  const clearOtherTopics = useCallback(() => {
     if (!isClient) return;
     
     try {
@@ -155,7 +155,7 @@ export function useQuizState(topicId: string) {
     } catch (error) {
       console.error('Error clearing other topics:', error);
     }
-  };
+  }, [isClient, storageKey]);
 
   return {
     userAnswers,
