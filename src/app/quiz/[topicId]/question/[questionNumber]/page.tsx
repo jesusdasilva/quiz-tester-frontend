@@ -210,9 +210,6 @@ export default function QuestionPage() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* <div className="text-sm text-gray-600">
-              Pregunta {questionData.navigation.current} de {questionData.navigation.total}
-            </div> */}
             <Button
               variant="outline"
               onClick={toggleLanguage}
