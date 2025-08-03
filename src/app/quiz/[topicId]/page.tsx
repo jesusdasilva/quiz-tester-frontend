@@ -14,6 +14,7 @@ export default function QuizPage() {
   const [topic, setTopic] = useState<QuizTopic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startQuestion, setStartQuestion] = useState<number>(1);
 
   useEffect(() => {
     if (topicId) {
@@ -36,8 +37,10 @@ export default function QuizPage() {
     }
   }, [topicId]);
 
-  const handleStartQuiz = () => {
-    startNewQuiz();
+  const handleStartFromCustom = () => {
+    if (startQuestion >= 1 && startQuestion <= (topic?.questions_count || 1)) {
+      startNewQuiz();
+    }
   };
 
   const startNewQuiz = () => {
@@ -57,7 +60,7 @@ export default function QuizPage() {
       console.error('Error clearing quiz state:', error);
     }
     
-    router.push(`/quiz/${topicId}/question/1`);
+    router.push(`/quiz/${topicId}/question/${startQuestion}`);
   };
 
   if (loading) {
@@ -127,9 +130,23 @@ export default function QuizPage() {
             )}
             
             <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <span className="text-gray-700 font-medium">Comenzar desde la pregunta:</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={topic?.questions_count || 1}
+                  value={startQuestion}
+                  onChange={(e) => setStartQuestion(parseInt(e.target.value) || 1)}
+                  className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                  placeholder="1"
+                />
+              </div>
+              
               <Button 
-                onClick={handleStartQuiz}
+                onClick={handleStartFromCustom}
                 size="lg"
+                disabled={startQuestion < 1 || startQuestion > (topic?.questions_count || 1)}
                 className="w-full py-3 text-lg font-semibold flex items-center justify-center space-x-2"
               >
                 <Play className="h-5 w-5" />
@@ -139,6 +156,7 @@ export default function QuizPage() {
           </CardContent>
         </Card>
       </div>
+
 
     </main>
   );
