@@ -49,6 +49,7 @@ export default function QuestionPage() {
       updateTotalQuestions(data.navigation.total);
       
       // Cargar respuesta previa si existe
+      // este mensaje es de prueba
       const previousAnswer = getQuestionAnswer(questionNumber);
       if (previousAnswer) {
         setSelectedAnswers(previousAnswer.selectedAnswers);
